@@ -48,11 +48,67 @@ export class TouchControls {
         btn.classList.remove('active');
         actionSetter(false);
       }, { passive: false });
+
+      btn.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+        btn.classList.remove('active');
+        actionSetter(false);
+      }, { passive: false });
     };
 
-    bindBtn(this.fireBtn, (v) => { this.isFiring = v; });
-    bindBtn(this.reloadBtn, (v) => { this.isReloading = v; });
+    bindBtn(this.reloadBtn, (v) => {
+      this.isReloading = v;
+      if (v && window.sfx) window.sfx.playReload();
+    });
     bindBtn(this.grenadeBtn, (v) => { this.isGrenade = v; });
+
+    // Draggable Fire Button Aiming
+    this.fireTouchId = null;
+    this.fireCenter = { x: 0, y: 0 };
+
+    this.fireBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (this.fireTouchId !== null) return;
+      const touch = e.changedTouches[0];
+      this.fireTouchId = touch.identifier;
+      this.fireBtn.classList.add('active');
+      this.isFiring = true;
+
+      const rect = this.fireBtn.getBoundingClientRect();
+      this.fireCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }, { passive: false });
+
+    this.fireBtn.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        if (touch.identifier === this.fireTouchId) {
+          const dx = touch.clientX - this.fireCenter.x;
+          const dy = touch.clientY - this.fireCenter.y;
+          if (Math.sqrt(dx * dx + dy * dy) > 10) {
+            let deg = (Math.atan2(dx, dy) * 180 / Math.PI);
+            if (deg < 0) deg += 360;
+            this.lastAimAngle = deg;
+          }
+          break;
+        }
+      }
+    }, { passive: false });
+
+    const endFire = (e) => {
+      e.preventDefault();
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === this.fireTouchId) {
+          this.fireTouchId = null;
+          this.fireBtn.classList.remove('active');
+          this.isFiring = false;
+          break;
+        }
+      }
+    };
+
+    this.fireBtn.addEventListener('touchend', endFire, { passive: false });
+    this.fireBtn.addEventListener('touchcancel', endFire, { passive: false });
   }
 
   handleTouchStart(e) {

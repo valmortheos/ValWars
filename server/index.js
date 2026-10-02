@@ -134,6 +134,15 @@ setupWebSocket(server);
 if (require.main === module) {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`ValWars Server listening on http://0.0.0.0:${PORT}`);
+    const os = require('os');
+    const nets = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        if (net.family === 'IPv4' && !net.internal) {
+          console.log(`LAN: http://${net.address}:${PORT}`);
+        }
+      }
+    }
   });
 }
 

@@ -3,6 +3,8 @@ import { NetClient } from './net.js';
 import { GameScene } from './game/scene.js';
 import { TouchControls } from './game/controls.js';
 import { HUD } from './game/hud.js';
+import { sfx } from './game/audio.js';
+window.sfx = sfx;
 
 class App {
   constructor() {
@@ -75,6 +77,20 @@ class App {
 
     // Logout
     document.getElementById('logout-btn').addEventListener('click', () => this.handleLogout());
+
+    // Fullscreen Toggle
+    const fsBtn = document.getElementById('fullscreen-btn');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().then(() => {
+            lockOrientation('landscape');
+          }).catch(err => console.log('Fullscreen error:', err));
+        } else {
+          document.exitFullscreen().catch(err => console.log('Exit Fullscreen error:', err));
+        }
+      });
+    }
 
     // Room buttons
     document.getElementById('refresh-rooms-btn').addEventListener('click', () => {
@@ -154,6 +170,8 @@ class App {
 
     this.net.on('EVENT_SHOT', (msg) => {
       if (this.gameScene) this.gameScene.drawTracer(msg);
+      sfx.playShoot();
+      if (msg.hit) sfx.playDamage();
     });
 
     this.net.on('EVENT_GRENADE_THROWN', (msg) => {
@@ -162,6 +180,7 @@ class App {
 
     this.net.on('EVENT_GRENADE_EXPLODE', (msg) => {
       if (this.gameScene) this.gameScene.explodeGrenade(msg);
+      sfx.playExplosion();
     });
 
     this.net.on('EVENT_KILL', (msg) => {
@@ -337,6 +356,14 @@ class App {
       await this.gameScene.init();
     }
 
+    // Determine local player slot from players list in MATCH_STARTED event
+    let localSlot = null;
+    if (msg.players && Array.isArray(msg.players)) {
+      const me = msg.players.find(p => p.userId === this.myUserId);
+      if (me) localSlot = me.slot;
+    }
+
+    this.gameScene.setLocalPlayer(localSlot, msg.players);
     this.gameScene.loadMap(msg.map);
 
     this.controls = new TouchControls(

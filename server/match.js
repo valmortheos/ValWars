@@ -111,6 +111,16 @@ class Match {
     if (!p) return;
     const input = parsePlayerInputBuffer(buffer);
     if (input) {
+      // Validate numerical inputs to prevent NaN or infinite values
+      if (!Number.isFinite(input.moveAngle) || input.moveAngle < -1 || input.moveAngle > 360) {
+        return;
+      }
+      if (!Number.isFinite(input.moveMag) || input.moveMag < 0 || input.moveMag > 1) {
+        return;
+      }
+      if (!Number.isFinite(input.aimAngle) || input.aimAngle < 0 || input.aimAngle > 360) {
+        return;
+      }
       p.input = input;
     }
   }
@@ -197,8 +207,15 @@ class Match {
     // Process Grenades
     this.updateGrenades(dt);
 
-    // Check Win condition
-    if (this.redScore >= TARGET_KILLS || this.blueScore >= TARGET_KILLS) {
+    // Check Win condition across all modes (Red, Blue, or FFA)
+    let maxFfaKills = 0;
+    if (this.ffaScores) {
+      for (const k of this.ffaScores.values()) {
+        if (k > maxFfaKills) maxFfaKills = k;
+      }
+    }
+
+    if (this.redScore >= TARGET_KILLS || this.blueScore >= TARGET_KILLS || maxFfaKills >= TARGET_KILLS) {
       this.endMatch('Target Kills Reached');
       return;
     }
@@ -377,6 +394,12 @@ class Match {
         attacker.kills++;
         if (attacker.team === 'red') this.redScore++;
         else if (attacker.team === 'blue') this.blueScore++;
+        else {
+          // FFA mode or custom team: increment attacker's kill score
+          if (!this.ffaScores) this.ffaScores = new Map();
+          const cur = this.ffaScores.get(attacker.userId) || 0;
+          this.ffaScores.set(attacker.userId, cur + 1);
+        }
       }
 
       this.room.broadcast({
