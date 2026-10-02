@@ -1,0 +1,16 @@
+{
+  "6b492c20-9146-494d-b41c-a88a409ad736": {
+    "id": "6b492c20-9146-494d-b41c-a88a409ad736",
+    "username": "testuser",
+    "hash": "2278ff93b65f1329780a7a129c7ee553ea0e4e5deba40730c0909408d318f2b347d07ed0a0e498be8c9015abb4e7978e5e08ade481292fb023d45722da943057",
+    "salt": "2a2333cc06e3914e807e586ef80c4457",
+    "createdAt": 1790924495971
+  },
+  "61583c13-a0fa-4f96-baae-a7f23a39c9f1": {
+    "id": "61583c13-a0fa-4f96-baae-a7f23a39c9f1",
+    "username": "pwuser100",
+    "hash": "ff7914051b913f1e49a5c1279e6724eef7dda415db5b239cb574bf7de6c274812369286ecad53671de913ab8b4f6b55ef5aa8f9b5e77c1911e358b426b48b5cd",
+    "salt": "cba7ab86b2f18e0b4df16aefa62c5f81",
+    "createdAt": 1790924995431
+  }
+}
